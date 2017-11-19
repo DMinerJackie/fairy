@@ -24,5 +24,3 @@ lib/
 .idea/
 ~$*.docx
 /.metadata
-openapi-version-manager/src/main/webapp/META-INF/MANIFEST.MF
-openapi-version-manager/classes/*
