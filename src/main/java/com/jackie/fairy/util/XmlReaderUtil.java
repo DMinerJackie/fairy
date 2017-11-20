@@ -27,7 +27,7 @@ public class XmlReaderUtil {
 
         try {
             //获取要读取的配置文件的路径
-            URL xmlPath = XmlReaderUtil.class.getClassLoader().getResource(fileName);
+            URL xmlPath = FileURLUtil.getFileURL(fileName);
             //读取文件内容
             document = saxReader.read(xmlPath);
             //获取xml中的根元素

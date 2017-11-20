@@ -12,8 +12,12 @@ public class FairyTest {
 
     @Test
     public void testLoadBean() {
-        FairyApplicationContext applicationContext = new FairyApplicationContext("application-context.xml", ParseType.XML_PARSER);
-        FairyBean fairyBean = (FairyBean) applicationContext.getBean("fairyBean");
-        fairyBean.greet();
+        FairyApplicationContext xmlApplicationContext = new FairyApplicationContext("application-context.xml", ParseType.XML_PARSER);
+        FairyBean xmlFairyBean = (FairyBean) xmlApplicationContext.getBean("fairyBean");
+        xmlFairyBean.greet();
+
+        FairyApplicationContext jsonApplicationContext = new FairyApplicationContext("application-context.json", ParseType.JSON_PARSER);
+        FairyBean jsonFairyBean = (FairyBean) jsonApplicationContext.getBean("fairyBean");
+        jsonFairyBean.greet();
     }
 }
