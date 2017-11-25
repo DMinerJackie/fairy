@@ -1,4 +1,0 @@
-<beans>
-<bean id="fairyBean" class="com.jackie.fairy.bean.impl.FairyBeanImpl">
-</bean>
-</beans>
