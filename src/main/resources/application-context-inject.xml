@@ -1,0 +1,9 @@
+<beans>
+    <bean id="fairyService" class="com.jackie.fairy.bean.impl.FairyServiceImpl">
+        <property name="fairyDao" ref="fairyDao"></property>
+        <property name="lightColor" value="blue"></property>
+    </bean>
+
+    <bean id="fairyDao" class="com.jackie.fairy.bean.impl.FairyDaoImpl">
+    </bean>
+</beans>

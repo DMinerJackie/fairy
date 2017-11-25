@@ -5,13 +5,19 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.jackie.fairy.constant.ParseType;
 import com.jackie.fairy.model.BeanDefinition;
+import com.jackie.fairy.model.PropertyDefinition;
 import com.jackie.fairy.paser.Parser;
 import com.jackie.fairy.paser.factory.ParserFactory;
+import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.beans.BeanInfo;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 
@@ -27,12 +33,56 @@ public class FairyApplicationContext {
     public FairyApplicationContext() {
     }
 
+    public FairyApplicationContext(String configLocation) {
+        this(configLocation, ParseType.XML_PARSER);
+    }
+
     public FairyApplicationContext(String configLocation, ParseType parseType) {
         // 加载xml并转换为BeanDefinition
         this.loadConfigFile(configLocation, parseType);
 
         // 实例化BeanDefinition
         this.instanceBeanDefinitions();
+
+        this.injectObject();
+    }
+
+    private void injectObject() {
+        for (BeanDefinition beanDefinition : beanDefinitions) {
+            Object bean = instanceBeans.get(beanDefinition.getId());
+            if (bean != null) {
+                try {
+                    BeanInfo beanInfo = Introspector.getBeanInfo(bean.getClass());
+                    PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+
+                    for (PropertyDefinition propertyDefinition : beanDefinition.getPropertyDefinitions()) {
+                        for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
+                            if (StringUtils.equals(propertyDescriptor.getName(), propertyDefinition.getName())) {
+                                Method setter = propertyDescriptor.getWriteMethod();
+                                if (setter != null) {
+                                    Object value = null;
+                                    if (StringUtils.isNotEmpty(propertyDefinition.getRef())) {
+                                        value = instanceBeans.get(propertyDefinition.getRef());
+                                    } else {
+                                        value = ConvertUtils.convert(propertyDefinition.getValue(), propertyDescriptor.getPropertyType());
+                                    }
+
+                                    setter.setAccessible(true);
+                                    try {
+                                        setter.invoke(bean, value);
+                                    } catch (Exception e) {
+                                        LOG.error("invoke setter.invoke failed", e);
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    LOG.error("invoke getBean failed", e);
+                }
+            }
+        }
     }
 
     private void loadConfigFile(String configLocation, ParseType parseType) {
