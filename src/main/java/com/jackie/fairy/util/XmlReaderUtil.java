@@ -42,6 +42,7 @@ public class XmlReaderUtil {
                 String clazz = element.attributeValue(Constants.BEAN_CLASS_NAME);
                 BeanDefinition beanDefinition = new BeanDefinition(id, clazz);
 
+                // 遍历属性标签
                 for (Iterator propertyIterator = element.elementIterator(); propertyIterator.hasNext();) {
                     Element propertyElement = (Element) propertyIterator.next();
                     String name = propertyElement.attributeValue(Constants.PROPERTY_NAME_NAME);
@@ -52,6 +53,7 @@ public class XmlReaderUtil {
 
                 beanDefinition.setPropertyDefinitions(propertyDefinitions);
                 beanDefinitions.add(beanDefinition);
+                // 清空propertyDefinitions集合，因为有些bean没有property标签
                 propertyDefinitions = Lists.newArrayList();
             }
 

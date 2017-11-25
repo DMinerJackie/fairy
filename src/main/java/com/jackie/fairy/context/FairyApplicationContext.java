@@ -44,6 +44,7 @@ public class FairyApplicationContext {
         // 实例化BeanDefinition
         this.instanceBeanDefinitions();
 
+        // 实现依赖注入
         this.injectObject();
     }
 
@@ -53,22 +54,32 @@ public class FairyApplicationContext {
             if (bean != null) {
                 try {
                     BeanInfo beanInfo = Introspector.getBeanInfo(bean.getClass());
+                    /**
+                     * 通过BeanInfo来获取属性的描述器(PropertyDescriptor)
+                     * 通过这个属性描述器就可以获取某个属性对应的getter/setter方法
+                     * 然后我们就可以通过反射机制来调用这些方法。
+                     */
                     PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
 
                     for (PropertyDefinition propertyDefinition : beanDefinition.getPropertyDefinitions()) {
                         for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
+                            // 用户定义的bean属性与java内省后的bean属性名称相同时
                             if (StringUtils.equals(propertyDescriptor.getName(), propertyDefinition.getName())) {
+                                // 获取setter方法
                                 Method setter = propertyDescriptor.getWriteMethod();
                                 if (setter != null) {
                                     Object value = null;
                                     if (StringUtils.isNotEmpty(propertyDefinition.getRef())) {
+                                        // 根据bean的名称在instanceBeans中获取指定的对象值
                                         value = instanceBeans.get(propertyDefinition.getRef());
                                     } else {
                                         value = ConvertUtils.convert(propertyDefinition.getValue(), propertyDescriptor.getPropertyType());
                                     }
 
+                                    // //保证setter方法可以访问私有
                                     setter.setAccessible(true);
                                     try {
+                                        // 把引用对象注入到属性
                                         setter.invoke(bean, value);
                                     } catch (Exception e) {
                                         LOG.error("invoke setter.invoke failed", e);
