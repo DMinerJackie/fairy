@@ -37,5 +37,14 @@ public class FairyTest {
         FairyService fairyService = (FairyService) autowiredApplicationContext.getBean("fairyService");
         fairyService.greet();
         fairyService.lighting();
+
+        /**
+         * bean依赖注入
+         */
+        FairyApplicationContext annotationApplicationContext =
+                new FairyApplicationContext("application-context-annotation-inject.xml");
+        FairyService annotationFairyService = (FairyService) annotationApplicationContext.getBean("fairyService");
+        annotationFairyService.greet();
+        annotationFairyService.lighting();
     }
 }

@@ -1,5 +1,6 @@
 package com.jackie.fairy.bean.impl;
 
+import com.jackie.fairy.annotation.JackieAutowired;
 import com.jackie.fairy.bean.FairyDao;
 import com.jackie.fairy.bean.FairyService;
 
@@ -7,6 +8,7 @@ import com.jackie.fairy.bean.FairyService;
  * Created by jackie on 17/11/25.
  */
 public class FairyServiceImpl implements FairyService {
+    @JackieAutowired
     private FairyDao fairyDao;
     private String lightColor;
 

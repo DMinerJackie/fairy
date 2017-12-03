@@ -3,6 +3,7 @@ package com.jackie.fairy.context;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.jackie.fairy.annotation.JackieAutowired;
 import com.jackie.fairy.constant.ParseType;
 import com.jackie.fairy.model.BeanDefinition;
 import com.jackie.fairy.model.PropertyDefinition;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
@@ -44,8 +46,85 @@ public class FairyApplicationContext {
         // 实例化BeanDefinition
         this.instanceBeanDefinitions();
 
+        // 基于注解的依赖注入
+        this.annotationInject();
+
         // 实现依赖注入
         this.injectObject();
+    }
+
+    private void annotationInject() {
+        for (String beanName : instanceBeans.keySet()) {
+            Object bean = instanceBeans.get(beanName);
+            if (bean != null) {
+                try {
+                    BeanInfo beanInfo = Introspector.getBeanInfo(bean.getClass());
+                    PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+
+                    for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
+                        // 获取Setter方法
+                        Method setter = propertyDescriptor.getWriteMethod();
+
+                        if (setter != null && setter.isAnnotationPresent(JackieAutowired.class)) {
+                            JackieAutowired jackieAutowired = setter.getAnnotation(JackieAutowired.class);
+                            Object value = null;
+
+                            if (jackieAutowired != null && StringUtils.isNotEmpty(jackieAutowired.name())) {
+                                value = instanceBeans.get(jackieAutowired.name());
+                            } else {
+                                value = instanceBeans.get(propertyDescriptor.getName());
+                                if (value == null) {
+                                    for (String key : instanceBeans.keySet()) {
+                                        if (propertyDescriptor.getPropertyType().isAssignableFrom(instanceBeans.get(key).getClass())) {
+                                            value=instanceBeans.get(key);//类型匹配的话就把此相同类型的
+                                            break;//找到了类型相同的bean，退出循环
+                                        }
+                                    }
+                                }
+                            }
+
+                            setter.setAccessible(true);
+                            try {
+                                setter.invoke(bean, value);
+                            } catch (Exception e) {
+                                LOG.error("invoke setter invoke failed", e);
+                            }
+                        }
+                    }
+
+                    Field[] fields = bean.getClass().getDeclaredFields();
+                    for (Field field : fields) {
+                        if (field.isAnnotationPresent(JackieAutowired.class)) {
+                            JackieAutowired jackieAutowired = field.getAnnotation(JackieAutowired.class);
+                            Object value = null;
+
+                            if (jackieAutowired != null && StringUtils.isNotEmpty(jackieAutowired.name())) {
+                                value = instanceBeans.get(jackieAutowired.name());
+                            } else {
+                                value = instanceBeans.get(field.getName());
+                                if (value == null) {
+                                    for (String key : instanceBeans.keySet()) {
+                                        if (field.getType().isAssignableFrom(instanceBeans.get(key).getClass())) {
+                                            value = instanceBeans.get(key);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+
+                            field.setAccessible(true);
+                            try {
+                                field.set(bean, value);
+                            } catch (Exception e) {
+                                LOG.error("invoke field.set failed", e);
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    LOG.error("invoke getBean failed", e);
+                }
+            }
+        }
     }
 
     private void injectObject() {

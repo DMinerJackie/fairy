@@ -1,0 +1,7 @@
+<beans>
+    <bean id="fairyService" class="com.jackie.fairy.bean.impl.FairyServiceImpl">
+    </bean>
+
+    <bean id="fairyDao" class="com.jackie.fairy.bean.impl.FairyDaoImpl">
+    </bean>
+</beans>
